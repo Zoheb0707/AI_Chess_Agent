@@ -80,7 +80,7 @@ def findPincerMoves(state, curr_coord):
     for direction in move_dir:
         test_row = row
         test_col = col
-        for num in range(8):
+        for num in range(7):
             if direction == BC.NORTH:
                 # increment north one tile
                 test_row = test_row - 1
@@ -108,66 +108,13 @@ def findPincerMoves(state, curr_coord):
             # if it is blank, add move and new state to list of tuples
             if orig_board[test_row][test_col] == 0:
 
-                # test if this is a capture move or not
-                enemy_row = test_row
-                enemy_col = test_col
-                ally_row = test_row
-                ally_col = test_col
-                # set ally piece and enemy piece to default blank spaces
-                ally_piece = 0
-                enemy_piece = 0
-                cap_test = False
-                # capture test: piece one tile past is enemy piece and
-                # piece one two tiles past is friendly piece
-                if direction == BC.NORTH:
-                    enemy_row = test_row - 1
-                    ally_row = test_row - 2
-                    # ally must be below top boundary of board
-                    if ally_row >= 0:
-                        ally_piece = orig_board[ally_row][ally_col]
-                        enemy_piece = orig_board[enemy_row][enemy_col]
-                elif direction == BC.EAST:
-                    # increment east
-                    enemy_col = test_col + 1
-                    ally_col = test_col + 2
-                    if ally_col <= 7:
-                        ally_piece = orig_board[ally_row][ally_col]
-                        enemy_piece = orig_board[enemy_row][enemy_col]
-                elif direction == BC.SOUTH:
-                    # increment south
-                    enemy_row = test_row + 1
-                    ally_row = test_row + 2
-                    if ally_col <= 7:
-                        ally_piece = orig_board[ally_row][ally_col]
-                        enemy_piece = orig_board[enemy_row][enemy_col]
-                elif direction == BC.WEST:
-                    # increment west
-                    enemy_col = test_col - 1
-                    ally_col = test_col - 2
-                    if ally_col >= 0:
-                        ally_piece = orig_board[ally_row][ally_col]
-                        enemy_piece = orig_board[enemy_row][enemy_col]
-
-                # if friend and enemy are not blank
-                if not ally_piece == 0 and not enemy_piece == 0:
-                    ally_side = BC.who(ally_piece)
-                    enemy_side = BC.who(enemy_piece)
-                    # if other pincer is friendly, and the
-                    # captured piece is an enemy
-                    if ally_side == who and not enemy_side == who:
-                        cap_test = True
-
                 # deep copy the lists of lists
                 new_board = deepcopy(newState.board)
                 new_board[test_row][test_col] = piece
                 new_board[row][col] = 0
-                #print("value of enemy: " + str(enemy_piece))
-                #print("value of ally: " + str(ally_piece))
-                #print("value of cap_test: " + str(cap_test))
 
-                if cap_test:
-                    # capture enemy piece
-                    new_board[enemy_row][enemy_col] = 0
+                # capture enemy piece if possible
+                pincerCapMove(test_row, test_col, direction, new_board, who)
 
                 add_state = BC.BC_state(new_board)
                 #print("added state:")
@@ -190,6 +137,68 @@ def findKingMoves(state, curr_coord):
     k_moves = []
 
     return k_moves
+
+# this function takes a given board and captures an enemy piece via the Pincer
+# attack if it is possible to according to Baroque Chess rules
+def pincerCapMove(dest_row, dest_col, direction, board, cur_player):
+    # test if this is a capture move or not
+    enemy_row = dest_row
+    enemy_col = dest_col
+    ally_row = dest_row
+    ally_col = dest_col
+    # set ally piece and enemy piece to default blank spaces
+    ally_piece = 0
+    enemy_piece = 0
+    cap_test = False
+
+    # capture test: piece one tile past is enemy piece and
+    # piece one two tiles past is friendly piece
+    if direction == BC.NORTH:
+        enemy_row = dest_row - 1
+        ally_row = dest_row - 2
+        # ally must be below top boundary of board
+        if ally_row >= 0:
+            ally_piece = board[ally_row][ally_col]
+            enemy_piece = board[enemy_row][enemy_col]
+    elif direction == BC.EAST:
+        # increment east
+        enemy_col = dest_col + 1
+        ally_col = dest_col + 2
+        if ally_col <= 7:
+            ally_piece = board[ally_row][ally_col]
+            enemy_piece = board[enemy_row][enemy_col]
+    elif direction == BC.SOUTH:
+        # increment south
+        enemy_row = dest_row + 1
+        ally_row = dest_row + 2
+        if ally_row <= 7:
+            ally_piece = board[ally_row][ally_col]
+            enemy_piece = board[enemy_row][enemy_col]
+    elif direction == BC.WEST:
+        # increment west
+        enemy_col = dest_col - 1
+        ally_col = dest_col - 2
+        if ally_col >= 0:
+            ally_piece = board[ally_row][ally_col]
+            enemy_piece = board[enemy_row][enemy_col]
+
+    # if friend and enemy are not blank
+    if not ally_piece == 0 and not enemy_piece == 0:
+        ally_side = BC.who(ally_piece)
+        enemy_side = BC.who(enemy_piece)
+        # if other pincer is friendly, and the
+        # captured piece is an enemy
+        if ally_side == cur_player and not enemy_side == cur_player:
+            cap_test = True
+
+    #print("value of enemy: " + str(enemy_piece))
+    #print("value of ally: " + str(ally_piece))
+    #print("value of cap_test: " + str(cap_test))
+
+    if cap_test:
+        # capture enemy piece
+        board[enemy_row][enemy_col] = 0
+    
 
 # have not implemented test for determining whether the king is in check or not
 #def isKingInCheck(state):
