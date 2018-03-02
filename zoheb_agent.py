@@ -1,7 +1,7 @@
 import BC_state_etc as BC
+from pdb import set_trace as st
 
 def makeMove(currentState, currentRemark, timelimit):
-
     # Compute the new state for a move.
     # This is a placeholder that just copies the current state.
     newState = BC.BC_state(currentState.board)
@@ -32,6 +32,7 @@ def prepare(player2Nickname):
     pass
 
     #global variables for weights of pieces
+
 def staticEval(state):
     #list of available pieces
     #list of directions
@@ -54,3 +55,4 @@ def staticEval(state):
                         #decrement move_sum by weight
     #to return = 0.7*(move_sum) + 0.3*(piece_sum)
     #return to return
+    return none
