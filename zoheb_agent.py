@@ -31,8 +31,26 @@ def introduce():
 def prepare(player2Nickname):
     pass
 
+    #global variables for weights of pieces
 def staticEval(state):
-    if state.whose_turn == 1:
-        #max
-    else:
-        #min
+    #list of available pieces
+    #list of directions
+    #to return = 0
+    #piece_present_sum = 0
+    #move_sum = 0
+    #for list of available pieces
+        #is_White = Flase;is_Black = False
+        #if piece is white
+            #add weight to piece_present_sum
+        #else
+        #remove weight from piece_present_sum
+        #for all directions:
+            #if can move there:
+                #get final position
+                #if enemy present
+                    #if piece is white
+                        #increment move_sum by weight
+                    #else
+                        #decrement move_sum by weight
+    #to return = 0.7*(move_sum) + 0.3*(piece_sum)
+    #return to return
