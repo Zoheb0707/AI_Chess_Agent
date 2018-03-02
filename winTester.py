@@ -1,6 +1,10 @@
 
 
+<<<<<<< HEAD
 import BC_state_etc as bcs
+=======
+import new_succ as bcs
+>>>>>>> 89aaec4329e1ea5956dc3f75c4871ab3672a80bc
 
 def winTester(s):
   possibleWin = "No win"

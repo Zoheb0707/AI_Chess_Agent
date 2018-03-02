@@ -92,6 +92,7 @@ P P P P P P P P
 F L I W K I L C
 ''')
 
+<<<<<<< HEAD
 # testing pincer capture with pincer at location
 # (6,0)
 test0 = parse('''
@@ -105,6 +106,8 @@ P P P P P P P P
 F L I W K I L C
 ''')
 
+=======
+>>>>>>> 89aaec4329e1ea5956dc3f75c4871ab3672a80bc
 class BC_state:
     def __init__(self, old_board=INITIAL, whose_move=WHITE):
         new_board = [r[:] for r in old_board]  # Deeply copy the board.
