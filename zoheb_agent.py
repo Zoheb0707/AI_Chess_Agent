@@ -32,6 +32,7 @@ def prepare(player2Nickname):
     pass
 
 def staticEval(state):
-    #figure out whose turn it is.
-    #if white's then maximize state value.
-    #if black's then minimise it.
+    if state.whose_turn == 1:
+        #max
+    else:
+        #min
