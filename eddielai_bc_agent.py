@@ -60,15 +60,110 @@ def findLeaperMoves(state, curr_coord):
 
 # may change this function later
 def findQueenStyleMoves(state, curr_coord):
+    # deep copy the current state into a new state
+    orig_board = state.board
+    newState = BC.BC_state(orig_board)
     who = state.whose_move
+    
     q_moves = []
+    (row, col) = curr_coord
+    (test_row, test_col) = curr_coord
+    piece = orig_board[row][col]
+
+    move_dir = [BC.NORTH, BC.NE, BC.EAST, BC.SE, BC.SOUTH, BC.SW, BC.WEST, BC.NW]
+
+    for direction in move_dir:
+        test_row = row
+        test_col = col
+        for num in range(7):
+            if direction == BC.NORTH:
+                # increment north one tile
+                test_row = test_row - 1
+                #print("north")
+            elif direction == BC.NE:
+                # increment northeast one tile
+                test_row = test_row - 1
+                test_col += 1
+                #print("ne")
+            elif direction == BC.EAST:
+                # increment east one tile
+                test_col += 1
+                #print("east")
+            elif direction == BC.SE:
+                # increment southeast one tile
+                test_row += 1
+                test_col += 1
+            elif direction == BC.SOUTH:
+                # increment south one tile
+                test_row += 1
+                #print("south")
+            elif direction == BC.SW:
+                # increment southwest one tile
+                test_row += 1
+                test_col = test_col - 1
+                #print("sw")
+            elif direction == BC.WEST:
+                # increment west one tile
+                test_col = test_col - 1
+                #print("west")
+            elif direction == BC.NW:
+                # increment nw one tile
+                test_row = test_row - 1
+                test_col = test_col - 1
+
+            # test if this is a valid tile
+            if test_row < 0 or test_row > 7:
+                break
+            if test_col < 0 or test_col > 7:
+                break
+
+            # if it is a blank tile
+            if orig_board[test_row][test_col] == 0:
+                # do something
+                #print("this is a blank tile!")
+
+                # deep copy the lists of lists
+                new_board = deepcopy(newState.board)
+                new_board[test_row][test_col] = piece
+                new_board[row][col] = 0
+
+                ### capture enemy piece if possible
+                if piece == BC.BLACK_COORDINATOR or piece == BC.WHITE_COORDINATOR:
+                    # coordinator code
+                    print("i am a coordinator! please do coordinating things please! :)")
+                # leaper may change target location
+                elif piece == BC.BLACK_LEAPER or piece == BC.WHITE_LEAPER:
+                    # leaper code
+                    print("i am a leaper! please do leapy things! :P")
+                # imitator may change target location if imitating a leaper
+                elif piece == BC.BLACK_IMITATOR or piece == BC.WHITE_IMITATOR:
+                    # imitator code
+                    print("i am an imitator! imitation is the sincerest form of flattery ;)")
+                elif piece == BC.BLACK_WITHDRAWER or piece == BC.WHITE_WITHDRAWER:
+                    # withdrawer code
+                    print("i am a withdrawer! i like to be anti-social T_T")
+        
+
+                add_state = BC.BC_state(new_board)
+                #print("added state:")
+                #print(str(add_state))
+
+                # target location is (test_row, test_col)
+                move = (curr_coord, (test_row, test_col))
+
+                # this is where a check to determine whether the new state is one where
+                # the king is in check would occur; if the king is in check in the new
+                # state, don't append the move and state to the list
+                q_moves.append((move, add_state))
+            else:
+                break
     
     return q_moves
 
 def findPincerMoves(state, curr_coord):
     newState = BC.BC_state(state.board)
     who = state.whose_move
-    print("who am i: " + str(who))
+    #print("who am i: " + str(who))
     p_moves = []
     orig_board = state.board
     (row, col) = curr_coord
@@ -198,6 +293,26 @@ def pincerCapMove(dest_row, dest_col, direction, board, cur_player):
     if cap_test:
         # capture enemy piece
         board[enemy_row][enemy_col] = 0
+
+def coordCapMove():
+    print("coordinator doesn't know how to capture")
+    # intersection of king's rank and coordinator's file and coordinator's file
+    # and king's rank are captured
+
+def leaperCapMove():
+    print("leaper doesn't know how to capture")
+    # can leap over any piece in diagonal line as long there is one tile of space
+    # right after the enemy piece 
+
+# one of the hardest to code
+def imitatorCapMove():
+    print("imitator doesn't know how to capture")
+    # tbh i have no idea how to code this one i'll figure it out later
+
+def withdrawerCapMove():
+    print("withdrawer doesn't know how to capture")
+    # if enemy was directly adjacent to withdrawer in the opposite direction of
+    # withdrawer's movement, the enemy is captured
     
 
 # have not implemented test for determining whether the king is in check or not
