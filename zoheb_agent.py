@@ -31,28 +31,38 @@ def introduce():
 def prepare(player2Nickname):
     pass
 
-    #global variables for weights of pieces
-
+#methods required to be implemented: canMove(initial_coords,final_coords,state)
+#                                    getKillList(initial_coords,final_coords,state)
 def staticEval(state):
-    #list of available pieces
-    #list of directions
-    #to return = 0
-    #piece_present_sum = 0
-    #move_sum = 0
-    #for list of available pieces
-        #is_White = Flase;is_Black = False
-        #if piece is white
-            #add weight to piece_present_sum
-        #else
-        #remove weight from piece_present_sum
-        #for all directions:
-            #if can move there:
-                #get final position
-                #if enemy present
-                    #if piece is white
-                        #increment move_sum by weight
-                    #else
-                        #decrement move_sum by weight
-    #to return = 0.7*(move_sum) + 0.3*(piece_sum)
-    #return to return
-    return none
+    weights = [0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7]
+    board = state.board
+    white_list = []
+    black_list = []
+    piece_present_sum = 0
+    for i in range(0,8):
+        for j in range(0,8):
+            piece = board[i][j]
+            if piece != 0 and piece != 1:
+                if piece % 2 == 0:
+                    piece_present_sum -= weights[piece]
+                    black_list.append([piece,(i,j)])
+                else:
+                    piece_present_sum += weights[piece]
+                    white_list.append([piece,(i,j)])
+    to_return = 0.3*(piece_present_sum)
+    move_sum = 0
+    available_pieces = white_list + black_list
+    for [piece,(x,y)] in available_pieces:
+        for i in range(0,8):
+            for j in range(0,8):
+                if canMove((x,y),(i,j),state):
+                    kill_list = getKillList((x,y),(i,j),state)
+                    kill_sum = 0
+                    for elem in kill_list:
+                        kill_sum += weights[elem]
+                    if not(piece % 2 == 0):
+                        move_sum += kill_sum
+                    else:
+                        move_sum -= kill_sum
+    to_return += 0.7*(move_sum)
+    return to_return
