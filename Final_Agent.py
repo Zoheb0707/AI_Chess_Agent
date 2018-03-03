@@ -1,4 +1,5 @@
 import BC_state_etc as BC
+from pdb import set_trace as st
 
 def makeMove(currentState, currentRemark, timelimit):
 
@@ -21,13 +22,44 @@ def makeMove(currentState, currentRemark, timelimit):
     return [[move, newState], newRemark]
 
 def nickname():
-    return "Newman"
+    return "Agent Smith"
 
 def introduce():
-    return "I'm Newman Barry, a newbie Baroque Chess agent."
+    return "I'm Agent Smith, a Baroque Chess agent."
 
 def prepare(player2Nickname):
     pass
 
 def StaticEval(state):
-    return None
+    weights = [0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7]
+    board = state.board
+    white_list = []
+    black_list = []
+    piece_present_sum = 0
+    for i in range(0,8):
+        for j in range(0,8):
+            piece = board[i][j]
+            if piece != 0 and piece != 1:
+                if piece % 2 == 0:
+                    piece_present_sum -= weights[piece]
+                    black_list.append([piece,(i,j)])
+                else:
+                    piece_present_sum += weights[piece]
+                    white_list.append([piece,(i,j)])
+    to_return = 0.3*(piece_present_sum)
+    move_sum = 0
+    available_pieces = white_list + black_list
+    for [piece,(x,y)] in available_pieces:
+        for i in range(0,8):
+            for j in range(0,8):
+                if canMove((x,y),(i,j),state):
+                    kill_list = getKillList((x,y),(i,j),state)
+                    kill_sum = 0
+                    for elem in kill_list:
+                        kill_sum += weights[elem]
+                    if not(piece % 2 == 0):
+                        move_sum += kill_sum
+                    else:
+                        move_sum -= kill_sum
+    to_return += 0.7*(move_sum)
+    return to_return
