@@ -1,4 +1,4 @@
-'''PlayerSkeletonA.py
+'''milestone2_agent.py
 The beginnings of an agent that might someday play Baroque Chess.
 
 '''
@@ -8,17 +8,15 @@ The beginnings of an agent that might someday play Baroque Chess.
 import BC_state_etc as BC
 from copy import deepcopy
 import random
-from pdb import set_trace as st
 
 def makeMove(currentState, currentRemark, timelimit):
 
     # Compute the new state for a move.
     # This is a placeholder that just copies the current state.
     newState = BC.BC_state(currentState.board)
-    curr_player = currentState.whose_move
+    curr_player = newState.whose_move
     gameBoard = newState.board
     all_moves = []
-    print("current player: " + str(curr_player))
 
     for row in range(8):
         for col in range(8):
@@ -297,15 +295,14 @@ def findKingMoves(state, curr_coord):
     k_moves = []
     (king_row, king_col) = curr_coord
     piece = newState.board[king_row][king_col]
-    
+    test_row = king_row
+    test_col = king_col
+    test_piece = 99
     piece_cap = []
 
     move_dir = [BC.NORTH, BC.NE, BC.EAST, BC.SE, BC.SOUTH, BC.SW, BC.WEST, BC.NW]
 
     for direction in move_dir:
-        test_piece = 99
-        test_row = king_row
-        test_col = king_col
         if direction == BC.NORTH:
             test_row = king_row - 1
         elif direction == BC.NE:
@@ -337,9 +334,6 @@ def findKingMoves(state, curr_coord):
                 piece_cap = []
 
                 new_board = deepcopy(newState.board)
-                
-                #print("test_row: " + str(test_row))
-                #print("test_col: " + str(test_col))
                 new_board[test_row][test_col] = piece
                 new_board[king_row][king_col] = 0
 
@@ -665,7 +659,6 @@ def isPieceImmobilized(piece_row, piece_col, board, curr_player):
     freezer = 0
     test_row = piece_row
     test_col = piece_col
-    test_piece = 0
 
     if curr_player == BC.WHITE:
         freezer = BC.BLACK_FREEZER
@@ -765,6 +758,4 @@ def staticEval(state):
                         move_sum -= kill_sum
     to_return += 0.7*(move_sum)
     return to_return
-
-
 

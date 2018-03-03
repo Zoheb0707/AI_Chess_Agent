@@ -14,9 +14,10 @@ def makeMove(currentState, currentRemark, timelimit):
     # Compute the new state for a move.
     # This is a placeholder that just copies the current state.
     newState = BC.BC_state(currentState.board)
-    curr_player = newState.whose_move
+    curr_player = currentState.whose_move
     gameBoard = newState.board
     all_moves = []
+    print("current player: " + str(curr_player))
 
     for row in range(8):
         for col in range(8):
@@ -55,7 +56,7 @@ def makeMove(currentState, currentRemark, timelimit):
     # currentState to the newState.
     # Here is a placeholder in the right format but with made-up
     # numbers:
-    move = ((6, 4), (3, 4))
+    #move = ((6, 4), (3, 4))
 
     # Make up a new remark
     newRemark = "I'll think harder in some future game. Here's my move"
@@ -295,14 +296,15 @@ def findKingMoves(state, curr_coord):
     k_moves = []
     (king_row, king_col) = curr_coord
     piece = newState.board[king_row][king_col]
-    test_row = king_row
-    test_col = king_col
-    test_piece = 99
+    
     piece_cap = []
 
     move_dir = [BC.NORTH, BC.NE, BC.EAST, BC.SE, BC.SOUTH, BC.SW, BC.WEST, BC.NW]
 
     for direction in move_dir:
+        test_piece = 99
+        test_row = king_row
+        test_col = king_col
         if direction == BC.NORTH:
             test_row = king_row - 1
         elif direction == BC.NE:
@@ -334,6 +336,9 @@ def findKingMoves(state, curr_coord):
                 piece_cap = []
 
                 new_board = deepcopy(newState.board)
+                
+                #print("test_row: " + str(test_row))
+                #print("test_col: " + str(test_col))
                 new_board[test_row][test_col] = piece
                 new_board[king_row][king_col] = 0
 
@@ -659,6 +664,7 @@ def isPieceImmobilized(piece_row, piece_col, board, curr_player):
     freezer = 0
     test_row = piece_row
     test_col = piece_col
+    test_piece = 0
 
     if curr_player == BC.WHITE:
         freezer = BC.BLACK_FREEZER
@@ -722,6 +728,42 @@ def canMove(curr_coord, final_coord, state):
             move_test = True
 
     return move_test
+
+#methods required to be implemented: canMove(initial_coords,final_coords,state)
+#                                    getKillList(initial_coords,final_coords,state)
+def staticEval(state):
+    weights = [0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7]
+    board = state.board
+    white_list = []
+    black_list = []
+    piece_present_sum = 0
+    for i in range(0,8):
+        for j in range(0,8):
+            piece = board[i][j]
+            if piece != 0 and piece != 1:
+                if piece % 2 == 0:
+                    piece_present_sum -= weights[piece]
+                    black_list.append([piece,(i,j)])
+                else:
+                    piece_present_sum += weights[piece]
+                    white_list.append([piece,(i,j)])
+    to_return = 0.3*(piece_present_sum)
+    move_sum = 0
+    available_pieces = white_list + black_list
+    for [piece,(x,y)] in available_pieces:
+        for i in range(0,8):
+            for j in range(0,8):
+                if canMove((x,y),(i,j),state):
+                    kill_list = getKillList((x,y),(i,j),state)
+                    kill_sum = 0
+                    for elem in kill_list:
+                        kill_sum += weights[elem]
+                    if not(piece % 2 == 0):
+                        move_sum += kill_sum
+                    else:
+                        move_sum -= kill_sum
+    to_return += 0.7*(move_sum)
+    return to_return
 
 
 
