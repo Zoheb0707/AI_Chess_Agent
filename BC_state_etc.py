@@ -92,6 +92,39 @@ P P P P P P P P
 F L I W K I L C
 ''')
 
+test0 = parse('''
+c l i w k i l f
+p p p p p p - p
+- - - - - - C -
+- - - - - P P P
+- - - - - - - -
+- - - - - - - -
+P P P P P P P P
+F L I W K I p C
+''')
+
+test1 = parse('''
+c l - w k i l f
+- - p - - p p p
+- p - p - - - -
+- p L - p - - -
+- p p - - - - -
+- - - - - - - -
+P P P P P p P P
+F L I W K I - C
+''')
+
+test2 = parse('''
+c - i w k i l f
+p p - p p p p p
+- - - - p p - -
+- - - - W p - -
+- - - - p p - -
+- - - - - - - -
+P - P P P P P P
+- L I W K I L C
+''')
+
 class BC_state:
     def __init__(self, old_board=INITIAL, whose_move=WHITE):
         new_board = [r[:] for r in old_board]  # Deeply copy the board.
