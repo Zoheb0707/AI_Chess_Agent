@@ -1,5 +1,6 @@
 import BC_state_etc as BC
 from pdb import set_trace as st
+import time
 
 def makeMove(currentState, currentRemark, timelimit):
     # Compute the new state for a move.
@@ -67,18 +68,28 @@ def staticEval(state):
     to_return += 0.7*(move_sum)
     return to_return
 
+
 def miniMax(current_state, whos_turn, ply_left):
     if ply_left == 0: return staticEval(current_state);
     prov = 0
+    curr_coords = (0,0)
+    final_coords = (0,0)
     if whos_turn == 'W': prov = -10000 #if white then maximize.
     else: prov = 10000
-    # for s in all successor states
-        #new_val = miniMax(s, other(whos_turn), ply_left - 1)
-        #if (whos_turn == ‘W’ and new_val > prov) or\
-        #(whos_move == 'B'and new_val < prov):
-            #prov = new_val
-    return prov
+    next_turn = 0
+    if whos_turn == 0: next_turn == 1
+    for s in generateNewMoves(current_state,whos_turn)
+        curr_coords = s[1][0]
+        final_coords = s[1][1]
+        new_val = miniMax(s[2], next_turn, ply_left - 1)
+        if (whos_turn == 'W' and new_val > prov) or\
+        (whos_turn == 'B'and new_val < prov):
+            prov = new_val
+    move = (curr_coords,final_coords)
+    return (prov,move)
 
 def IDDFS(current_state, whos_turn, time_limit):
     Minimax_Value = 0
+    plyLeft = 0
+    start_time = time.time
     return Minimax_vale
