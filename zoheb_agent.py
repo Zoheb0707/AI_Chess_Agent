@@ -66,3 +66,19 @@ def staticEval(state):
                         move_sum -= kill_sum
     to_return += 0.7*(move_sum)
     return to_return
+
+def miniMax(current_state, whos_turn, ply_left):
+    if ply_left == 0: return staticEval(current_state);
+    prov = 0
+    if whos_turn == 'W': prov = -10000 #if white then maximize.
+    else: prov = 10000
+    # for s in all successor states
+        #new_val = miniMax(s, other(whos_turn), ply_left - 1)
+        #if (whos_turn == ‘W’ and new_val > prov) or\
+        #(whos_move == 'B'and new_val < prov):
+            #prov = new_val
+    return prov
+
+def IDDFS(current_state, whos_turn, time_limit):
+    Minimax_Value = 0
+    return Minimax_vale
