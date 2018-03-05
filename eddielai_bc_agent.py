@@ -13,8 +13,9 @@ def makeMove(currentState, currentRemark, timelimit):
 
     # Compute the new state for a move.
     # This is a placeholder that just copies the current state.
-    newState = BC.BC_state(currentState.board)
     curr_player = currentState.whose_move
+    newState = BC.BC_state(currentState.board, curr_player)
+    
     gameBoard = newState.board
     all_moves = []
     print("current player: " + str(curr_player))
@@ -37,11 +38,12 @@ def makeMove(currentState, currentRemark, timelimit):
     #findPincerMoves(newState, (1,0))
     #findQueenStyleMoves(newState, (3, 2))
     #findQueenStyleMoves(newState, (3, 4))
-        
-    #tup = random.choice(generatedMoves)
+    #findPincerMoves(newState, (3,3))
+    #findImitatorMoves(newState, (2,6))
+    tup = random.choice(generatedMoves)
     #print("tuple: " + str(tup))
-    #move = tup[0]
-    #newState = tup[1]
+    move = tup[0]
+    newState = tup[1]
     
 
     # Fix up whose turn it will be.
@@ -51,7 +53,7 @@ def makeMove(currentState, currentRemark, timelimit):
     # currentState to the newState.
     # Here is a placeholder in the right format but with made-up
     # numbers:
-    move = ((6, 4), (3, 4))
+    #move = ((6, 4), (3, 4))
 
     # Make up a new remark
     newRemark = "I'll think harder in some future game. Here's my move"
@@ -91,6 +93,10 @@ def generateNewMoves(currentState, curr_player):
                             #for ele in move:
                             #    print(str(ele))
                             all_moves.append(move)
+                    elif piece == BC.BLACK_IMITATOR or piece == BC.WHITE_IMITATOR:
+                        i_moves = findImitatorMoves(testState, (row, col))
+                        for move in i_moves:
+                            all_moves.append(move)
                     else:
                         q_moves = findQueenStyleMoves(testState, (row,col))
                         for move in q_moves:
@@ -116,24 +122,27 @@ def prepare(player2Nickname):
 
 # whose_move: 1 is white, 0 is black
 
-# incomplete method
+# tested method
 def findImitatorMoves(state, curr_coord):
     who = state.whose_move
-    newState = BC.BC_state(state.board)
+    newState = BC.BC_state(state.board, who)
     i_moves = []
     gameBoard = state.board
-    withdrawer = 0
-    freezer = 0
-    coordinator = 0
-    king = 0
-    pincer = 0
-    leaper = 0
 
-    
-    
+    queenLikeMoves = findQueenStyleMoves(newState, curr_coord)
+    for move_q in queenLikeMoves:
+        i_moves.append(move_q)
+        
+    kingLikeMoves = findKingMoves(newState, curr_coord)
+    for move_k in kingLikeMoves:
+        i_moves.append(move_k)
 
-    #print("board state: ")
-    #print(str(state))
+    '''
+    for move in i_moves:
+        print("state")
+        for ele in move:
+            print(str(ele))
+            '''
 
     
 
@@ -146,14 +155,22 @@ def findQueenStyleMoves(state, curr_coord):
     who = state.whose_move
     newState = BC.BC_state(orig_board, who)
     
-    
     q_moves = []
     (row, col) = curr_coord
     (test_row, test_col) = curr_coord
     piece = orig_board[row][col]
-    special_piece = False
+    leaper = False
+    coordinator = False
+    withdrawer = False
+    imitator = False
     if piece == BC.BLACK_LEAPER or piece == BC.WHITE_LEAPER:
-        special_piece = True
+        leaper = True
+    elif piece == BC.BLACK_COORDINATOR or piece == BC.WHITE_COORDINATOR:
+        coordinator = True
+    elif piece == BC.BLACK_WITHDRAWER or piece == BC.WHITE_WITHDRAWER:
+        withdrawer = True
+    elif piece == BC.BLACK_IMITATOR or piece == BC.WHITE_IMITATOR:
+        imitator = True
 
     move_dir = [BC.NORTH, BC.NE, BC.EAST, BC.SE, BC.SOUTH, BC.SW, BC.WEST, BC.NW]
 
@@ -161,6 +178,10 @@ def findQueenStyleMoves(state, curr_coord):
         test_row = row
         test_col = col
         same_location = False
+        pincer_direction = False
+        if direction == BC.NORTH or direction == BC.EAST or direction == BC.SOUTH\
+           or direction == BC.WEST:
+            pincer_direction = True
         
         for num in range(8):
             if direction == BC.NORTH:
@@ -198,7 +219,7 @@ def findQueenStyleMoves(state, curr_coord):
                 test_row = test_row - 1
                 test_col = test_col - 1
 
-            if num == 0 and special_piece:
+            if num == 0 and leaper:
                 test_row = row
                 test_col = col
                 same_location = True
@@ -228,21 +249,53 @@ def findQueenStyleMoves(state, curr_coord):
                 cap_pieces = []
 
                 ### capture enemy piece if possible
-                if piece == BC.BLACK_COORDINATOR or piece == BC.WHITE_COORDINATOR:
+                if imitator:
+                    # preparing the imitator capture move for the types of capture
+                    #print("i am an imitator")
+                    #print("who am i: " + str(who))
+                    leaper_state = BC.BC_state(new_board, who)
+                    leap_tup = leaperCapMove(test_row, test_col, direction, who, curr_coord, leaper_state)
+                    '''print("leap_tup: " + str(leap_tup))
+                    lol = False
+                    if leap_tup == 0:
+                        lol = True
+                    print("leap tup test: " + str(lol))'''
+                    #print("leap tup: " + str(leap_tup))
+                    if not leap_tup == 0:
+                        #print("first scenario")
+                        new_target = leap_tup[0]
+                        cap_piece = leap_tup[1]
+                        new_move = (curr_coord, new_target)
+                        q_moves.append((new_move, leaper_state, cap_piece))
+                    if pincer_direction:
+                        #print("this should appear in the second scenario")
+                        cap_pieces = pincerCapMove(test_row, test_col, new_board, who)
+
+                    # base case
+                    c_cap_pieces = coordCapMove(test_row, test_col, new_board, who)
+                    for piece_c in c_cap_pieces:
+                        cap_pieces.append(piece_c)
+                    
+                    w_cap_pieces = withdrawerCapMove(row, col, test_row, test_col, direction, new_board, who)
+                    for piece_w in w_cap_pieces:
+                        cap_pieces.append(piece_w)
+                    
+                elif coordinator:
                     # coordinator code
                     #print("i am a coordinator! please do coordinating things please! :)")
                     cap_pieces = coordCapMove(test_row, test_col, new_board, who)
 
                     #print("captured pieces: " + str(cap_pieces))
                 # leaper may change target location
-                elif piece == BC.BLACK_LEAPER or piece == BC.WHITE_LEAPER:
+                elif leaper:
                     # leaper code
                     #print("i am a leaper! please do leapy things! :P")
 
                     # create new state to add to q moves potentially
                     leaper_state = BC.BC_state(new_board, who)
                     leap_tup = leaperCapMove(test_row, test_col, direction, who, curr_coord, leaper_state)
-                    if not leap_tup == 0:
+
+                    if not (leap_tup == 0):
                         new_target = leap_tup[0]
                         cap_piece = leap_tup[1]
                         new_move = (curr_coord, new_target)
@@ -250,11 +303,11 @@ def findQueenStyleMoves(state, curr_coord):
                         #print(str(leaper_state))
                         #print("captured pieces: " + str(cap_piece))
                         q_moves.append((new_move, leaper_state, cap_piece))
-                elif piece == BC.BLACK_WITHDRAWER or piece == BC.WHITE_WITHDRAWER:
+                elif withdrawer:
                     # withdrawer code
                     #print("i am a withdrawer! i like to be anti-social T_T")
-                    cap_pieces = withdrawerCapMove(row, col, direction, new_board, who)
-        
+                    cap_pieces = withdrawerCapMove(row, col, test_row, test_col, direction, new_board, who)
+                
 
                 add_state = BC.BC_state(new_board)
                 #print("added state:")
@@ -272,82 +325,104 @@ def findQueenStyleMoves(state, curr_coord):
     
     return q_moves
 
+# won't return moves if called on a piece from the enemy side
 def findPincerMoves(state, curr_coord):
-    who = state.whose_move
-    newState = BC.BC_state(state.board, who)
-    #print("who am i: " + str(who))
     p_moves = []
     orig_board = state.board
     (row, col) = curr_coord
-    (test_row, test_col) = curr_coord
     piece = orig_board[row][col]
+    who = state.whose_move
 
-    move_dir = [BC.NORTH, BC.EAST, BC.SOUTH, BC.WEST]
+    piece_side = BC.who(piece)
+    
+    if piece_side == who: 
+        newState = BC.BC_state(state.board, who)
+        #print("who am i: " + str(who))
+        
+        (test_row, test_col) = curr_coord
+        
 
-    for direction in move_dir:
-        test_row = row
-        test_col = col
-        for num in range(7):
-            if direction == BC.NORTH:
-                # increment north one tile
-                test_row = test_row - 1
-                #print("north")
-            elif direction == BC.EAST:
-                # increment east one tile
-                test_col += 1
-                #print("east")
-            elif direction == BC.SOUTH:
-                # increment south one tile
-                test_row += 1
-                #print("south")
-            elif direction == BC.WEST:
-                # increment west one tile
-                test_col = test_col - 1
-                #print("west")
+        move_dir = [BC.NORTH, BC.EAST, BC.SOUTH, BC.WEST]
 
-            # test if this is a valid tile
-            if test_row < 0 or test_row > 7:
-                break
-            if test_col < 0 or test_col > 7:
-                break
+        for direction in move_dir:
+            test_row = row
+            test_col = col
+            for num in range(7):
+                if direction == BC.NORTH:
+                    # increment north one tile
+                    test_row = test_row - 1
+                    #print("north")
+                elif direction == BC.EAST:
+                    # increment east one tile
+                    test_col += 1
+                    #print("east")
+                elif direction == BC.SOUTH:
+                    # increment south one tile
+                    test_row += 1
+                    #print("south")
+                elif direction == BC.WEST:
+                    # increment west one tile
+                    test_col = test_col - 1
+                    #print("west")
 
-            
-            # if it is blank, add move and new state to list of tuples
-            if orig_board[test_row][test_col] == 0:
+                # test if this is a valid tile
+                if test_row < 0 or test_row > 7:
+                    break
+                if test_col < 0 or test_col > 7:
+                    break
 
-                # deep copy the lists of lists
-                new_board = deepcopy(newState.board)
-                new_board[test_row][test_col] = piece
-                new_board[row][col] = 0
-
-                # capture enemy piece if possible
-                piece_cap = pincerCapMove(test_row, test_col, new_board, who)
-
-                add_state = BC.BC_state(new_board, who)
-                #print("added state:")
-                #print(str(add_state))
-                move = (curr_coord, (test_row, test_col))
-
-                # this is where a check to determine whether the new state is one where
-                # the king is in check would occur; if the king is in check in the new
-                # state, don't append the move and state to the list
-                p_moves.append((move, add_state, piece_cap))
                 
-            else:
-                break
-            # if its not blank, break out of loop
+                # if it is blank, add move and new state to list of tuples
+                if orig_board[test_row][test_col] == 0:
+
+                    # deep copy the lists of lists
+                    new_board = deepcopy(newState.board)
+                    new_board[test_row][test_col] = piece
+                    new_board[row][col] = 0
+
+                    # capture enemy piece if possible
+                    piece_cap = pincerCapMove(test_row, test_col, new_board, who)
+
+                    add_state = BC.BC_state(new_board, who)
+                    #print("added state:")
+                    #print(str(add_state))
+                    move = (curr_coord, (test_row, test_col))
+
+                    # this is where a check to determine whether the new state is one where
+                    # the king is in check would occur; if the king is in check in the new
+                    # state, don't append the move and state to the list
+                    p_moves.append((move, add_state, piece_cap))
+                    
+                else:
+                    break
+                # if its not blank, break out of loop
 
     return p_moves
 
 # tested
 def findKingMoves(state, curr_coord):
     who = state.whose_move
+    
     newState = BC.BC_state(state.board, who)
     k_moves = []
     (king_row, king_col) = curr_coord
     piece = newState.board[king_row][king_col]
     
     piece_cap = []
+
+    ally_king = 0
+    ally_imitator = 0
+    enemy_king = 0
+
+    if who == BC.WHITE:
+        ally_king = BC.WHITE_KING
+        ally_imitator = BC.WHITE_IMITATOR
+        enemy_king = BC.BLACK_KING
+    else:
+        ally_king = BC.BLACK_KING
+        ally_imitator = BC.BLACK_IMITATOR
+        enemy_king = BC.WHITE_KING
+    
 
     move_dir = [BC.NORTH, BC.NE, BC.EAST, BC.SE, BC.SOUTH, BC.SW, BC.WEST, BC.NW]
 
@@ -383,37 +458,53 @@ def findKingMoves(state, curr_coord):
 
         if not test_piece == 99:
             if test_piece == 0:
-                piece_cap = []
+                if piece == ally_king:
+                    piece_cap = []
 
-                new_board = deepcopy(newState.board)
-                
-                #print("test_row: " + str(test_row))
-                #print("test_col: " + str(test_col))
-                new_board[test_row][test_col] = piece
-                new_board[king_row][king_col] = 0
+                    new_board = deepcopy(newState.board)
+                    
+                    #print("test_row: " + str(test_row))
+                    #print("test_col: " + str(test_col))
+                    new_board[test_row][test_col] = piece
+                    new_board[king_row][king_col] = 0
 
-                move = (curr_coord, (test_row, test_col))
+                    move = (curr_coord, (test_row, test_col))
 
-                add_state = BC.BC_state(new_board, who)
+                    add_state = BC.BC_state(new_board, who)
 
-                k_moves.append((move, add_state, piece_cap))
+                    k_moves.append((move, add_state, piece_cap))
             elif not test_piece_side == who:
                 #print("current player: " + str(who))
                 #print("target location: (" + str(test_row) + "," + str(test_col) + ")")
                 #print("test piece: " + str(test_piece))
                 #print("test piece side: " + str(test_piece_side))
-                piece_cap = []
-                piece_cap.append(test_piece)
+                if piece == ally_king:
+                    piece_cap = []
+                    piece_cap.append(test_piece)
 
-                new_board = deepcopy(newState.board)
-                new_board[test_row][test_col] = piece
-                new_board[king_row][king_col] = 0
+                    new_board = deepcopy(newState.board)
+                    new_board[test_row][test_col] = piece
+                    new_board[king_row][king_col] = 0
 
-                move = (curr_coord, (test_row, test_col))
+                    move = (curr_coord, (test_row, test_col))
 
-                add_state = BC.BC_state(new_board, who)
+                    add_state = BC.BC_state(new_board, who)
 
-                k_moves.append((move, add_state, piece_cap))
+                    k_moves.append((move, add_state, piece_cap))
+                elif piece == ally_imitator:
+                    if test_piece == enemy_king:
+                        piece_cap = []
+                        piece_cap.append(test_piece)
+
+                        new_board = deepcopy(newState.board)
+                        new_board[test_row][test_col] = piece
+                        new_board[king_row][king_col] = 0
+
+                        move = (curr_coord, (test_row, test_col))
+
+                        add_state = BC.BC_state(new_board, who)
+
+                        k_moves.append((move, add_state, piece_cap))
             '''else:
                 print("test_piece (own side?):  " + str(test_piece))'''
 
@@ -425,6 +516,7 @@ def findKingMoves(state, curr_coord):
 # need to test this again with capturing functionality in all directions
 def pincerCapMove(dest_row, dest_col, board, cur_player):
     # test if this is a capture move or not
+    #print("who am i (2): " + str(cur_player))
     enemy_row = dest_row
     enemy_col = dest_col
     ally_row = dest_row
@@ -435,6 +527,23 @@ def pincerCapMove(dest_row, dest_col, board, cur_player):
     cap_test = False
     # default captured piece is empty list
     captured_pieces = []
+
+    # initializing pieces for testing
+    pieceUsed = board[dest_row][dest_col]
+    enemy_pincer = 0
+    ally_imitator = 0
+    ally_pincer = 0
+
+    if cur_player == BC.WHITE:
+        enemy_pincer = BC.BLACK_PINCER
+        ally_imitator = BC.WHITE_IMITATOR
+        ally_pincer = BC.WHITE_PINCER
+    else:
+        enemy_pincer = BC.WHITE_PINCER
+        ally_imitator = BC.BLACK_IMITATOR
+        ally_pincer = BC.BLACK_PINCER
+
+    # testing if piece used for capture is a pincer or a chameleon
 
     move_dir = [BC.NORTH, BC.EAST, BC.SOUTH, BC.WEST]
 
@@ -499,19 +608,42 @@ def pincerCapMove(dest_row, dest_col, board, cur_player):
         #print("value of cap_test: " + str(cap_test))
 
         if cap_test:
-            # capture enemy piece
-            captured_pieces.append(enemy_piece)
-            board[enemy_row][enemy_col] = 0
+            if pieceUsed == ally_pincer:
+                # capture enemy piece
+                captured_pieces.append(enemy_piece)
+                board[enemy_row][enemy_col] = 0
+            elif pieceUsed == ally_imitator:
+                if enemy_piece == enemy_pincer:
+                    # capture enemy piece
+                    captured_pieces.append(enemy_piece)
+                    board[enemy_row][enemy_col] = 0
 
     return captured_pieces
 
-# tested
+# accounts for imitator as well as coordinator
 def coordCapMove(dest_row, dest_col, board, cur_player):
     # intersection of king's rank and coordinator's file and coordinator's file
     # and king's rank are captured
 
     # pieces captured is initialized to an empty list
     captured_pieces = []
+
+    # coordinator or imitator
+    pieceUsed = board[dest_row][dest_col]
+
+    # initialize enemy coord
+    enemy_coord = 0
+    ally_imitator = 0
+    ally_coord = 0
+
+    if cur_player == BC.WHITE:
+        enemy_coord = BC.BLACK_COORDINATOR
+        ally_imitator = BC.WHITE_IMITATOR
+        ally_coord = BC.WHITE_COORDINATOR
+    else:
+        enemy_coord = BC.WHITE_COORDINATOR
+        ally_imitator = BC.BLACK_IMITATOR
+        ally_coord = BC.BLACK_COORDINATOR
 
     (row_king, col_king) = findAllyKing(board, cur_player)
 
@@ -525,17 +657,28 @@ def coordCapMove(dest_row, dest_col, board, cur_player):
     # side of captured pieces
     piece1_side = BC.who(cap_piece1)
     piece2_side = BC.who(cap_piece2)
-    
 
-    # if captured piece 1 is an enemy, capture it!
-    if not piece1_side == cur_player and not cap_piece1 == 0:
-        captured_pieces.append(cap_piece1)
-        board[row_king][dest_col] = 0
+    if pieceUsed == ally_coord:
+        # if captured piece 1 is an enemy, capture it!
+        if not piece1_side == cur_player and not cap_piece1 == 0:
+            captured_pieces.append(cap_piece1)
+            board[row_king][dest_col] = 0
 
-    # if captured piece 2 is an enemy, capture it!
-    if not piece2_side == cur_player and not cap_piece2 == 0:
-        captured_pieces.append(cap_piece2)
-        board[dest_row][col_king] = 0
+        # if captured piece 2 is an enemy, capture it!
+        if not piece2_side == cur_player and not cap_piece2 == 0:
+            captured_pieces.append(cap_piece2)
+            board[dest_row][col_king] = 0
+            
+    elif pieceUsed == ally_imitator:
+        # if imitator can imitate an enemy coordinator
+        if cap_piece1 == enemy_coord:
+            captured_pieces.append(cap_piece1)
+            board[row_king][dest_col] = 0
+
+        elif cap_piece2 == enemy_coord:
+            captured_pieces.append(cap_piece2)
+            board[dest_row][col_king] = 0
+            
         
     return captured_pieces
 
@@ -563,6 +706,7 @@ def findAllyKing(test_board, who):
 def leaperCapMove(dest_row, dest_col, direction, cur_player, curr_coord, new_state):
     # can leap over any piece in diagonal line as long there is one tile of space
     # right after the enemy piece
+    
 
     # test if this is a capture move or not
     enemy_row = dest_row
@@ -577,6 +721,19 @@ def leaperCapMove(dest_row, dest_col, direction, cur_player, curr_coord, new_sta
     piece = board[dest_row][dest_col]
     # default captured piece is empty list
     captured_pieces = []
+
+    enemy_leaper = 0
+    ally_imitator = 0
+    ally_leaper = 0
+
+    if cur_player == BC.WHITE:
+        enemy_leaper = BC.BLACK_LEAPER
+        ally_imitator = BC.WHITE_IMITATOR
+        ally_leaper = BC.WHITE_LEAPER
+    else:
+        enemy_leaper = BC.BLACK_LEAPER
+        ally_imitator = BC.WHITE_IMITATOR
+        ally_leaper = BC.WHITE_LEAPER
 
     # capture test: piece one tile past is enemy piece and
     # piece one two tiles past is empty space
@@ -634,16 +791,27 @@ def leaperCapMove(dest_row, dest_col, direction, cur_player, curr_coord, new_sta
             cap_test = True
 
     if cap_test:
-        new_board = new_state.board
-        #print("piece: " + str(piece))
-        new_board[empty_row][empty_col] = piece
-        new_board[dest_row][dest_col] = 0
-        captured_pieces.append(enemy_piece)
-        new_board[enemy_row][enemy_col] = 0
-        # return the new target location and captured piece (board has been modified in place)
-        return ((empty_row, empty_col), captured_pieces)
-    else:
-        return 0
+        if piece == ally_leaper:
+            new_board = new_state.board
+            #print("piece: " + str(piece))
+            new_board[empty_row][empty_col] = piece
+            new_board[dest_row][dest_col] = 0
+            captured_pieces.append(enemy_piece)
+            new_board[enemy_row][enemy_col] = 0
+            # return the new target location and captured piece (board has been modified in place)
+            return ((empty_row, empty_col), captured_pieces)
+        elif piece == ally_imitator:
+            if enemy_piece == enemy_leaper:
+                new_board = new_state.board
+                #print("piece: " + str(piece))
+                new_board[empty_row][empty_col] = piece
+                new_board[dest_row][dest_col] = 0
+                captured_pieces.append(enemy_piece)
+                new_board[enemy_row][enemy_col] = 0
+                # return the new target location and captured piece (board has been modified in place)
+                return ((empty_row, empty_col), captured_pieces)
+
+    return 0
 
     
 
@@ -654,7 +822,7 @@ def imitatorCapMove(orig_row, orig_col, dest_row, dest_col, direction, board, cu
     #withdrawerCapMove
 
 # tested
-def withdrawerCapMove(orig_row, orig_col, direction, board, cur_player):
+def withdrawerCapMove(orig_row, orig_col, dest_row, dest_col, direction, board, cur_player):
     # if enemy was directly adjacent to withdrawer in the opposite direction of
     # withdrawer's movement, the enemy is captured
 
@@ -664,6 +832,21 @@ def withdrawerCapMove(orig_row, orig_col, direction, board, cur_player):
     enemy_col = orig_col
     enemy_piece = 0
     cap_piece = []
+
+    # initializing pieces
+    pieceUsed = board[dest_row][dest_col]
+    ally_withdrawer = 0
+    ally_imitator = 0
+    enemy_withdrawer = 0
+
+    if cur_player == BC.WHITE:
+        ally_withdrawer = BC.WHITE_WITHDRAWER
+        ally_imitator = BC.WHITE_IMITATOR
+        enemy_withdrawer = BC.BLACK_WITHDRAWER
+    else:
+        ally_withdrawer = BC.BLACK_WITHDRAWER
+        ally_imitator = BC.BLACK_IMITATOR
+        enemy_withdrawer = BC.WHITE_WITHDRAWER
     
     if direction == BC.NORTH:
         # test one tile south of original location to see if it's an enemy
@@ -701,8 +884,13 @@ def withdrawerCapMove(orig_row, orig_col, direction, board, cur_player):
     enemy_side = BC.who(enemy_piece)
 
     if not enemy_side == cur_player and not enemy_piece == 0:
-        cap_piece.append(enemy_piece)
-        board[enemy_row][enemy_col] = 0
+        if pieceUsed == ally_withdrawer:
+            cap_piece.append(enemy_piece)
+            board[enemy_row][enemy_col] = 0
+        elif pieceUsed == ally_imitator:
+            if enemy_piece == enemy_withdrawer:
+                cap_piece.append(enemy_piece)
+                board[enemy_row][enemy_col] = 0
 
     return cap_piece
 

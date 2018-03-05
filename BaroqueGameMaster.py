@@ -14,7 +14,7 @@ VERSION = '0.8-BETA'
 
 import sys
 TIME_PER_MOVE = 0.5 # default time limit is half a second.
-TURN_LIMIT = 2   # Good for testing.
+TURN_LIMIT = 200   # Good for testing.
 
 #TURN_LIMIT = 100 # Terminates runaway games.
 if len(sys.argv) > 1:
