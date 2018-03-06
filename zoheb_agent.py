@@ -1,6 +1,7 @@
 import BC_state_etc as BC
 from pdb import set_trace as st
 import time
+import random
 
 def makeMove(currentState, currentRemark, timelimit):
     # Compute the new state for a move.
@@ -28,14 +29,36 @@ def nickname():
 #select a name for the agent
 def introduce():
     return "I'm the agent, a Baroque Chess agent."
+'''
+TABLE = 2*[64*[0]] #made a hsh table of 0.
 
+#initialises hash values to random ints
+def myinit():
+    global TABLE
+    for i in range(2):
+        for j in range(64):
+            TABLE[i][j] = random.randint(0,4294967296)
+            
+#computes hash for a state board by exclusive-oring
+def zhash(state):
+    board = state.board
+    global TABLE
+    val = 0;
+    for i in range(64):
+        piece = None
+        if(board[i] > 1 and board[i] % 2 == 0):piece = 0
+        if(board[i] > 1 and board[i] % 2 == 1):piece = 1
+        if piece != None:
+            val ^= TABLE[piece][i]
+    return val
+'''
 def prepare(player2Nickname):
     pass
 
 #methods required to be implemented: canMove(initial_coords,final_coords,state)
 #                                    getKillList(initial_coords,final_coords,state)
 def staticEval(state):
-    weights = [0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7]
+    weights = [0,0,1,1,5,5,3,3,6,6,4,4,10,10,4,4]
     board = state.board
     white_list = []
     black_list = []
@@ -68,6 +91,7 @@ def staticEval(state):
     to_return += 0.7*(move_sum)
     return to_return
 
+
 #returns (None,None) it time runs out. Else returns a static eval value and a move.
 def miniMax(current_state, whos_turn, ply_left,start_time,time_limit):
     if(time.time - start.time < time_limit):
@@ -82,15 +106,17 @@ def miniMax(current_state, whos_turn, ply_left,start_time,time_limit):
         else: prov = 10000
         next_turn = 0
         if whos_turn == 0: next_turn == 1
-        for s in generateNewMoves(current_state,whos_turn);
-            curr_coords = s[1][0]
-            final_coords = s[1][1]
-            (new_val,test_move) = miniMax(s[2], next_turn, ply_left - 1,start_time,time_limit)
-            if (new_val != None and move != None):
-                if (whos_turn == 'W' and new_val > prov) or\
-                (whos_turn == 'B'and new_val < prov):
-                    prov = new_val
-                    move = (curr_coords,final_coords)
+        for s in generateNewMoves(current_state,whos_turn):
+            if(time.time - start.time < time_limit):
+                curr_coords = s[1][0]
+                final_coords = s[1][1]
+                (new_val,test_move) = miniMax(s[2], next_turn, ply_left - 1,start_time,time_limit)
+                if (new_val != None and move != None):
+                    if (whos_turn == 'W' and new_val > prov) or\
+                    (whos_turn == 'B'and new_val < prov):
+                        prov = new_val
+                        move = (curr_coords,final_coords)
+            else: return (None,None)
         return (prov,move)
     else: return (None,None)
 
