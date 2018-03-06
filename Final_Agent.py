@@ -733,7 +733,7 @@ def canMove(curr_coord, final_coord, state):
 #methods required to be implemented: canMove(initial_coords,final_coords,state)
 #                                    getKillList(initial_coords,final_coords,state)
 def staticEval(state):
-    weights = [0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7]
+    weights = [0,0,1,1,5,5,3,3,6,6,4,4,10,10,4,4]
     board = state.board
     white_list = []
     black_list = []
@@ -767,4 +767,42 @@ def staticEval(state):
     return to_return
 
 
+#returns (None,None) it time runs out. Else returns a static eval value and a move.
+def miniMax(current_state, whos_turn, ply_left,start_time,time_limit):
+    if(time.time - start.time < time_limit):
+        curr_coords = (0,0)
+        final_coords = (0,0)
+        if ply_left == 0:
+            prov = staticEval(current_state)
+            move = (curr_coords, final_coords)
+            return (prov,move)
+        prov = 0
+        if whos_turn == 'W': prov = -10000 #if white then maximize.
+        else: prov = 10000
+        next_turn = 0
+        if whos_turn == 0: next_turn == 1
+        for s in generateNewMoves(current_state,whos_turn):
+            if(time.time - start.time < time_limit):
+                curr_coords = s[1][0]
+                final_coords = s[1][1]
+                (new_val,test_move) = miniMax(s[2], next_turn, ply_left - 1,start_time,time_limit)
+                if (new_val != None and move != None):
+                    if (whos_turn == 'W' and new_val > prov) or\
+                    (whos_turn == 'B'and new_val < prov):
+                        prov = new_val
+                        move = (curr_coords,final_coords)
+            else: return (None,None)
+        return (prov,move)
+    else: return (None,None)
 
+#returns (None,None) if no time left. else returns a static eval value and a move. 
+def IDDFS(current_state, whos_turn, time_limit):
+    plyLeft = 0
+    minimax_value = (None,None)
+    start_time = time.time
+    while (time.time - start_time < time_limit):
+        new_value = miniMax(current_state,whos_turn,plyLeft,start_time,time_limit)
+        if new_value != (None,None):
+            minimax_value = new_value
+        plyLeft += 1
+    return minimax_value
