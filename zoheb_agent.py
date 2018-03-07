@@ -29,7 +29,7 @@ def nickname():
 #select a name for the agent
 def introduce():
     return "I'm the agent, a Baroque Chess agent."
-'''
+
 TABLE = 2*[64*[0]] #made a hsh table of 0.
 
 #initialises hash values to random ints
@@ -51,9 +51,9 @@ def zhash(state):
         if piece != None:
             val ^= TABLE[piece][i]
     return val
-'''
+
 def prepare(player2Nickname):
-    pass
+    myinit()
 
 #methods required to be implemented: canMove(initial_coords,final_coords,state)
 #                                    getKillList(initial_coords,final_coords,state)
@@ -91,14 +91,18 @@ def staticEval(state):
     to_return += 0.7*(move_sum)
     return to_return
 
-
+HASH_TABLE = {}
 #returns (None,None) it time runs out. Else returns a static eval value and a move.
 def miniMax(current_state, whos_turn, ply_left,start_time,time_limit):
     if(time.time - start.time < time_limit):
         curr_coords = (0,0)
         final_coords = (0,0)
         if ply_left == 0:
-            prov = staticEval(current_state)
+            hash_value = zhash(current_state)
+            if hash_value in HASH_TABLE:
+                prov = HASH_TABLE[hash_value]
+            else:
+                prov = staticEval(current_state)
             move = (curr_coords, final_coords)
             return (prov,move)
         prov = 0
@@ -108,21 +112,26 @@ def miniMax(current_state, whos_turn, ply_left,start_time,time_limit):
         if whos_turn == 0: next_turn == 1
         for s in generateNewMoves(current_state,whos_turn):
             if(time.time - start.time < time_limit):
-                curr_coords = s[1][0]
-                final_coords = s[1][1]
-                (new_val,test_move) = miniMax(s[2], next_turn, ply_left - 1,start_time,time_limit)
-                if (new_val != None and move != None):
+                curr_coords = s[0][0]
+                final_coords = s[0][1]
+                (new_val,test_move) = miniMax(s[1], next_turn, ply_left - 1,start_time,time_limit)
+                if (new_val != None and test_move != None):
                     if (whos_turn == 'W' and new_val > prov) or\
                     (whos_turn == 'B'and new_val < prov):
                         prov = new_val
                         move = (curr_coords,final_coords)
             else: return (None,None)
         return (prov,move)
-    else: return (None,None)
+    else:
+        hash_value = zhash(current_state)
+        if hash_value in HASH_TABLE:
+            prov = HASH_TABLE[hash_value]
+            return (prov,((0,0),(0,0)))
+        else : return (None,None)
 
 #returns (None,None) if no time left. else returns a static eval value and a move. 
 def IDDFS(current_state, whos_turn, time_limit):
-    plyLeft = 0
+    plyLeft = 1
     minimax_value = (None,None)
     start_time = time.time
     while (time.time - start_time < time_limit):
