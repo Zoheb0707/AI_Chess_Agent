@@ -8,7 +8,9 @@ The beginnings of an agent that might someday play Baroque Chess.
 import BC_state_etc as BC
 from copy import deepcopy
 import random
+import time
 
+TIME_BUFFER = 2
 INVALID_PIECE = 99
 BLANK_SPACE = 0
 
@@ -43,11 +45,23 @@ def makeMove(currentState, currentRemark, timelimit):
     #findQueenStyleMoves(newState, (3, 4))
     #findPincerMoves(newState, (3,3))
     #findImitatorMoves(newState, (2,6))
-    tup = random.choice(generatedMoves)
+    #tup = random.choice(generatedMoves)
     #print("tuple: " + str(tup))
-    move = tup[0]
-    newState = tup[1]
+
+    (val, move) = IDDFS(currentState, curr_player, timelimit)
+
     
+
+    num_of_move_tups = 0
+
+    for move_tup in generatedMoves:
+        num_of_move_tups += 1
+        any_move = move_tup[0]
+        any_state = move_tup[1]
+        if move == any_move:
+            newState = any_state
+
+    print("number of move tuples: " + str(num_of_move_tups))
 
     # Fix up whose turn it will be.
     newState.whose_move = 1 - currentState.whose_move
@@ -62,6 +76,7 @@ def makeMove(currentState, currentRemark, timelimit):
     newRemark = "I'll think harder in some future game. Here's my move"
 
     return [[move, newState], newRemark]
+    
 
 # move generator for any state
 def generateNewMoves(currentState, curr_player):
@@ -106,7 +121,6 @@ def generateNewMoves(currentState, curr_player):
                         q_moves = findQueenStyleMoves(testState, (row,col))
                         for move in q_moves:
                             all_moves.append(move)
-                    # note: have not implemented IMITATOR moves yet
 
     return all_moves
 
@@ -295,7 +309,7 @@ def findQueenStyleMoves(state, curr_coord):
                     cap_pieces = withdrawerCapMove(row, col, test_row, test_col, direction, new_board, who)
                 
 
-                add_state = BC.BC_state(new_board)
+                add_state = BC.BC_state(new_board, who)
                 #print("added state:")
                 #print(str(add_state))
                 # target location is (test_row, test_col)
@@ -943,24 +957,61 @@ def isPieceNextTo(piece_row, piece_col, board, other_piece):
         #print("other piece: " + str(other_piece))
 
         if test_piece == other_piece:
-            return (True, direction)
+            # return nextTo, and location of found piece
+            return (True, (test_row,test_col))
 
     return (False, None)
     
         
 def isPieceImmobilized(piece_row, piece_col, board, curr_player):
     global INVALID_PIECE
-    
+
+    # coordinates of piece used
     x_val = piece_row
     y_val = piece_col
-    freezer = INVALID_PIECE
+
+    # coordinates of enemy_freezer
+    x_freeze = 0
+    y_freeze = 0
+    
+    ally_freezer = INVALID_PIECE
+    ally_imitator = INVALID_PIECE
+    enemy_freezer = INVALID_PIECE
+    enemy_imitator = INVALID_PIECE
+    pieceUsed = board[x_val][y_val]
+    
+    freeze_test1 = False
+    freeze_test = False
 
     if curr_player == BC.WHITE:
-        freezer = BC.BLACK_FREEZER
+        ally_freezer = BC.WHITE_FREEZER
+        ally_imitator = BC.WHITE_IMITATOR
+        enemy_freezer = BC.BLACK_FREEZER
+        enemy_imitator = BC.BLACK_IMITATOR
     else:
-        freezer = BC.WHITE_FREEZER
+        ally_freezer = BC.BLACK_FREEZER
+        ally_imitator = BC.BLACK_IMITATOR
+        enemy_freezer = BC.WHITE_FREEZER
+        enemy_imitator = BC.WHITE_IMITATOR
 
-    (freeze_test, direction) = isPieceNextTo(x_val, y_val, board, freezer)
+    if pieceUsed == ally_freezer:
+        freeze_tup0 = isPieceNextTo(x_val, y_val, board, enemy_imitator)
+        freeze_test1 = freeze_tup0[0]
+
+    (freeze_test2, piece_location) = isPieceNextTo(x_val, y_val, board, enemy_freezer)
+
+    # if enemy freezer is found next to current piece
+    if freeze_test2:
+        (x_freeze, y_freeze) = piece_location
+        (nextToFreezer, location0) = isPieceNextTo(x_freeze, y_freeze, board, ally_freezer)
+        (nextToImitator, location1) = isPieceNextTo(x_freeze, y_freeze, board, ally_imitator)
+
+        if nextToFreezer or nextToImitator:
+            if not location0 == (x_val, y_val) or not location1 == (x_val, y_val):
+                    freeze_test2 = False
+
+    if freeze_test1 or freeze_test2:
+        freeze_test = True
 
     return freeze_test
     
@@ -982,7 +1033,7 @@ def canMove(curr_coord, final_coord, state):
     ally_imitator = INVALID_PIECE
     
 
-    if piece_side = BC.WHITE:
+    if piece_side == BC.WHITE:
         ally_pincer = BC.WHITE_PINCER
         ally_king = BC.WHITE_KING
         ally_imitator = BC.WHITE_IMITATOR
@@ -1010,7 +1061,7 @@ def canMove(curr_coord, final_coord, state):
     for tup in moves:
         test_move = tup[0]
         kill_list = tup[2]
-        if req_move == move:
+        if req_move == test_move:
             move_test = True
             return (move_test, kill_list)
 
@@ -1020,11 +1071,12 @@ def canMove(curr_coord, final_coord, state):
 #                                    getKillList(initial_coords,final_coords,state)
 # implemented getKillList in canMove
 def staticEval(state):
-    weights = [0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7]
+    weights = [0,0,1,1,5,5,3,3,6,6,4,4,10,10,4,4]
     board = state.board
     white_list = []
     black_list = []
     piece_present_sum = 0
+    can_move_sum = 0
     for i in range(0,8):
         for j in range(0,8):
             piece = board[i][j]
@@ -1041,8 +1093,10 @@ def staticEval(state):
     for [piece,(x,y)] in available_pieces:
         for i in range(0,8):
             for j in range(0,8):
-                (move_test, kill_list) = canMove((x,y),(i,j),state)
-                if move_test:
+                (moveTest, kill_list) = canMove((x,y),(i,j),state)
+                if moveTest:
+                    if not(piece % 2 == 0): can_move_sum += 1
+                    else: can_move_sum -= 1
                     kill_sum = 0
                     for elem in kill_list:
                         kill_sum += weights[elem]
@@ -1050,44 +1104,74 @@ def staticEval(state):
                         move_sum += kill_sum
                     else:
                         move_sum -= kill_sum
-    to_return += 0.7*(move_sum)
+    to_return += 0.5*(move_sum)
+    to_return += 0.2*(can_move_sum)
     return to_return
 
 #returns (None,None) it time runs out. Else returns a static eval value and a move.
-def miniMax(current_state, whos_turn, ply_left,start_time,time_limit):
-    if(time.time - start.time < time_limit):
+def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta):
+    global TIME_BUFFER
+    
+    cur_player = current_state.whose_move
+    #print("current player: " + )
+    if(time.time() - start_time < (time_limit - TIME_BUFFER)):
         curr_coords = (0,0)
         final_coords = (0,0)
+        
         if ply_left == 0:
+            #print("current state? (in minimax) " + str(current_state))
             prov = staticEval(current_state)
             move = (curr_coords, final_coords)
             return (prov,move)
+        
         prov = 0
-        if whos_turn == 'W': prov = -10000 #if white then maximize.
-        else: prov = 10000
-        next_turn = 0
-        if whos_turn == 0: next_turn == 1
-        for s in generateNewMoves(current_state,whos_turn);
-            curr_coords = s[1][0]
-            final_coords = s[1][1]
-            (new_val,test_move) = miniMax(s[2], next_turn, ply_left - 1,start_time,time_limit)
-            if (new_val != None and move != None):
-                if (whos_turn == 'W' and new_val > prov) or\
-                (whos_turn == 'B'and new_val < prov):
-                    prov = new_val
-                    move = (curr_coords,final_coords)
+        
+        if cur_player == BC.WHITE:
+            prov = -10000 #if white then maximize.
+        else:
+            prov = 10000
+        
+        for move_tup in generateNewMoves(current_state,cur_player):
+            if (time.time() - start_time < (time_limit - TIME_BUFFER)):
+                actual_move = move_tup[0]
+                succ_state = move_tup[1]
+                #print(str(succ_state))
+                curr_coords = actual_move[0]
+                final_coords = actual_move[1]
+                succ_state.whose_move = 1 - cur_player
+                (new_val,test_move) = miniMax(succ_state, ply_left - 1,start_time,time_limit, alpha, beta)
+                if (new_val != None and test_move != None):
+                    if cur_player == BC.WHITE:
+                        if new_val > prov:
+                            prov = new_val
+                            move = (curr_coords,final_coords)
+                        alpha = max(alpha, prov)
+                        if beta <= alpha:
+                            break
+                    else:
+                        if new_val < prov:
+                            prov = new_val
+                            move = (curr_coords,final_coords)
+                        beta = min(beta, prov)
+                        if beta <= alpha:
+                            break
         return (prov,move)
     else: return (None,None)
 
 #returns (None,None) if no time left. else returns a static eval value and a move. 
 def IDDFS(current_state, whos_turn, time_limit):
-    plyLeft = 0
+    global TIME_BUFFER
+    
+    plyLeft = 1
     minimax_value = (None,None)
-    start_time = time.time
-    while (time.time - start_time < time_limit):
-        new_value = miniMax(current_state,whos_turn,plyLeft,start_time,time_limit)
+    start_time = time.time()
+    while (time.time() - start_time < (time_limit - TIME_BUFFER)):
+        #print("current state? (in iddfs) " + str(current_state))
+        alpha = -99999
+        beta = 99999
+        (new_value, move) = miniMax(current_state,plyLeft,start_time,time_limit, alpha, beta)
         if new_value != (None,None):
-            minimax_value = new_value
+            minimax_value = (new_value, move)
         plyLeft += 1
     return minimax_value
 
