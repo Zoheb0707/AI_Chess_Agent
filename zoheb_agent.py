@@ -44,12 +44,13 @@ def zhash(state):
     board = state.board
     global TABLE
     val = 0;
-    for i in range(64):
-        piece = None
-        if(board[i] > 1 and board[i] % 2 == 0):piece = 0
-        if(board[i] > 1 and board[i] % 2 == 1):piece = 1
-        if piece != None:
-            val ^= TABLE[piece][i]
+    for i in range(8):
+        for j in range(8):
+            piece = None
+            if(board[i][j] > 1 and board[i][j] % 2 == 0):piece = 0
+            if(board[i][j] > 1 and board[i][j] % 2 == 1):piece = 1
+            if piece != None:
+                val ^= TABLE[piece][i]
     return val
 
 def prepare(player2Nickname):
