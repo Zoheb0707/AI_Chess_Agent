@@ -8,19 +8,17 @@ from copy import deepcopy
 from pdb import set_trace as st
 import random
 import time
-from operator import itemgetter
 
-TIME_BUFFER = 0.5
+TIME_BUFFER = 1
 INVALID_PIECE = 99
 BLANK_SPACE = 0
 HASH_TABLE = [[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] for r in range(8)]\
               for s in range(8)]
 Z_DICT = {}
 global OPP_NAME
-CUTOFFS = 0
 
 def makeMove(currentState, currentRemark, timelimit):
-    global OPP_NAME, Z_DICT, CUTOFFS
+    global OPP_NAME
 
     #print("nice to meet you, " + str(OPP_NAME))
 
@@ -52,28 +50,27 @@ def makeMove(currentState, currentRemark, timelimit):
         any_state = move_tup[1]
         '''
 
-    CUTOFFS = 0
-    
-    (val, move) = IDDFS(currentState, curr_player, timelimit)
+    #st()
+    #(val, move) = IDDFS(currentState, curr_player, timelimit)
 
     num_of_move_tups = 0
 
+    '''
     for move_tup in generatedMoves:
         num_of_move_tups += 1
         any_move = move_tup[0]
         any_state = move_tup[1]
         if move == any_move:
-            newState = any_state
+            newState = any_state'''
 
-    num_keys = len(Z_DICT.keys())
-
-    print("static evaluation function value: " + str(val))
-
-    print("number of move tuples: " + str(num_of_move_tups))
+    move_tup = random.choice(generatedMoves)
+    move = move_tup[0]
+    newState = move_tup[1]
     
-    print("number of key value pairs currently stored in zobrist hashing: " + str(num_keys))
 
-    print("number of alpha beta cutoffs: " + str(CUTOFFS))
+    #print("static evaluation function value: " + str(val))
+
+    #print("number of move tuples: " + str(num_of_move_tups))
 
     # Fix up whose turn it will be.
     newState.whose_move = 1 - currentState.whose_move
@@ -95,55 +92,51 @@ def generateNewMoves(currentState, curr_player):
     
     gameBoard = currentState.board
     all_moves = []
-    chosen_pairs = []
-
-    row = random.randint(0, 7)
-    col = random.randint(0, 7)
     
-    #for row in range(8):
-    #    for col in range(8):
-    while len(chosen_pairs) < 64:
-        #print("length of chosen pairs: " + str(len(chosen_pairs)))
-        row = random.randint(0, 7)
-        col = random.randint(0, 7)
-        while (row,col) in chosen_pairs:
-            row = random.randint(0, 7)
-            col = random.randint(0, 7)
-        chosen_pairs.append((row,col))
-        # must initialize the current player when copying state
-        testState = BC.BC_state(currentState.board, curr_player)
-        piece = gameBoard[row][col]
-        piece_side = BC.who(piece)
-        if piece_side == curr_player and not piece == BLANK_SPACE:
-            # test if piece is immobilized
-            immobile = isPieceImmobilized(row, col, gameBoard, curr_player)
-            if not immobile:
-                if piece == BC.BLACK_PINCER or piece == BC.WHITE_PINCER:
-                    p_moves = findPincerMoves(testState, (row, col))
-                    for move in p_moves:
-                        all_moves.append(move)
-                elif piece == BC.BLACK_KING or piece == BC.WHITE_KING:
-                    k_moves = findKingMoves(testState, (row, col))
-                    for move in k_moves:
-                        all_moves.append(move)
-                elif piece == BC.BLACK_IMITATOR or piece == BC.WHITE_IMITATOR:
-                    i_moves = findImitatorMoves(testState, (row, col))
-                    for move in i_moves:
-                        all_moves.append(move)
-                else:
-                    q_moves = findQueenStyleMoves(testState, (row,col))
-                    for move in q_moves:
-                        all_moves.append(move)
-
-    #print("chosen pairs list: " + str(chosen_pairs))
+    for row in range(8):
+        for col in range(8):
+            # must initialize the current player when copying state
+            testState = BC.BC_state(currentState.board, curr_player)
+            piece = gameBoard[row][col]
+            piece_side = BC.who(piece)
+            if piece_side == curr_player and not piece == BLANK_SPACE:
+                # test if piece is immobilized
+                #print("location: (" + str(row) + "," + str(col) + ")")
+                immobile = isPieceImmobilized(row, col, gameBoard, curr_player)
+                if not immobile:
+                    if piece == BC.BLACK_PINCER or piece == BC.WHITE_PINCER:
+                        p_moves = findPincerMoves(testState, (row, col))
+                        #print("p_moves:")
+                        for move in p_moves:
+                            #print()
+                            #print("one move in p moves: ")
+                            #for ele in move:
+                                #print(str(ele))
+                            all_moves.append(move)
+                    elif piece == BC.BLACK_KING or piece == BC.WHITE_KING:
+                        k_moves = findKingMoves(testState, (row, col))
+                        #print("k_moves: ")
+                        for move in k_moves:
+                            #print("one move in k moves: ")
+                            #for ele in move:
+                            #    print(str(ele))
+                            all_moves.append(move)
+                    elif piece == BC.BLACK_IMITATOR or piece == BC.WHITE_IMITATOR:
+                        i_moves = findImitatorMoves(testState, (row, col))
+                        for move in i_moves:
+                            all_moves.append(move)
+                    else:
+                        q_moves = findQueenStyleMoves(testState, (row,col))
+                        for move in q_moves:
+                            all_moves.append(move)
 
     return all_moves
 
 def nickname():
-    return "Magnus Carlsen"
+    return "Random Boy"
 
 def introduce():
-    return "I'd like to say I'm the best chess player in the world, but that would be an understatement."
+    return "Random everything. Even this statement"
 
 def prepare(player2Nickname):
     global OPP_NAME
@@ -160,6 +153,8 @@ def myinit():
         for j in range(8):
             for k in range(16):
                 HASH_TABLE[i][j][k] = random.randint(0,4294967296)
+
+    print("my init complete")
             
 #computes hash for a state board by exclusive-oring
 def zhash(state):
@@ -239,14 +234,17 @@ def findQueenStyleMoves(state, curr_coord):
         for num in range(8):
             if direction == BC.NORTH:
                 # increment north one tile
-                test_row -= 1
+                test_row = test_row - 1
+                #print("north")
             elif direction == BC.NE:
                 # increment northeast one tile
-                test_row -= 1
+                test_row = test_row - 1
                 test_col += 1
+                #print("ne")
             elif direction == BC.EAST:
                 # increment east one tile
                 test_col += 1
+                #print("east")
             elif direction == BC.SE:
                 # increment southeast one tile
                 test_row += 1
@@ -254,17 +252,20 @@ def findQueenStyleMoves(state, curr_coord):
             elif direction == BC.SOUTH:
                 # increment south one tile
                 test_row += 1
+                #print("south")
             elif direction == BC.SW:
                 # increment southwest one tile
                 test_row += 1
-                test_col -= 1
+                test_col = test_col - 1
+                #print("sw")
             elif direction == BC.WEST:
                 # increment west one tile
-                test_col -= 1
+                test_col = test_col - 1
+                #print("west")
             elif direction == BC.NW:
                 # increment nw one tile
-                test_row -= 1
-                test_col -= 1
+                test_row = test_row - 1
+                test_col = test_col - 1
 
             if num == 0 and (leaper or imitator):
                 test_row = row
@@ -346,6 +347,9 @@ def findQueenStyleMoves(state, curr_coord):
                 add_state = BC.BC_state(new_board, who)
                 move = (curr_coord, (test_row, test_col))
 
+                # this is where a check to determine whether the new state is one where
+                # the king is in check would occur; if the king is in check in the new
+                # state, don't append the move and state to the list
                 if not same_location:
                     q_moves.append((move, add_state, cap_pieces))
             else:
@@ -410,6 +414,9 @@ def findPincerMoves(state, curr_coord):
                     add_state = BC.BC_state(new_board, who)
                     move = (curr_coord, (test_row, test_col))
 
+                    # this is where a check to determine whether the new state is one where
+                    # the king is in check would occur; if the king is in check in the new
+                    # state, don't append the move and state to the list
                     p_moves.append((move, add_state, piece_cap))
                     
                 else:
@@ -528,6 +535,7 @@ def findKingMoves(state, curr_coord):
 # this function takes a given board and captures an enemy piece via the Pincer
 # attack if it is possible to according to Baroque Chess rules
 
+# need to test this again with capturing functionality in all directions
 def pincerCapMove(dest_row, dest_col, board, cur_player):
     global INVALID_PIECE, BLANK_SPACE
     
@@ -641,10 +649,7 @@ def coordCapMove(dest_row, dest_col, board, cur_player):
         ally_imitator = BC.BLACK_IMITATOR
         ally_coord = BC.BLACK_COORDINATOR
 
-    
     (row_king, col_king) = findAllyKing(board, cur_player)
-    print("king row: " + str(row_king))
-    print("king col: " + str(col_king))
 
     # possible captured pieces
     cap_piece1 = board[row_king][dest_col]
@@ -675,14 +680,14 @@ def coordCapMove(dest_row, dest_col, board, cur_player):
             captured_pieces.append(cap_piece2)
             board[dest_row][col_king] = BLANK_SPACE
             
+        
     return captured_pieces
 
+    
+                
 # helper method for coordCapMove
 def findAllyKing(test_board, who):
     global INVALID_PIECE
-
-    newState = BC.BC_state(test_board, who)
-    gameBoard = newState.board
     
     # assign king to invalid piece as default
     king = INVALID_PIECE
@@ -696,7 +701,7 @@ def findAllyKing(test_board, who):
     # find ally king location
     for test_row in range(8):
         for test_col in range(8):
-            if gameBoard[test_row][test_col] == king:
+            if test_board[test_row][test_col] == king:
                 return (test_row, test_col)
 
     
@@ -809,7 +814,6 @@ def leaperCapMove(dest_row, dest_col, direction, cur_player, curr_coord, new_sta
                 # return the new target location and captured piece (board has been modified in place)
                 return ((empty_row, empty_col), captured_pieces)
 
-    # default case, no capture takes place
     return 0
 
 
@@ -987,8 +991,11 @@ def isPieceImmobilized(piece_row, piece_col, board, curr_player):
         freeze_test = True
 
     return freeze_test
+    
+# have not implemented test for determining whether the king is in check or not
+#def isKingInCheck(state):
 
-# canMove takes too long for the static evaluation function
+# add possible pieces that can be killed in a given move to the tuple returned
 def canMove(curr_coord, final_coord, state):
     global INVALID_PIECE, BLANK_SPACE
     
@@ -1037,8 +1044,9 @@ def canMove(curr_coord, final_coord, state):
 
     return (move_test, None)
 
-# evaluation function to determine how good the board state is
-# for either black or white
+#methods required to be implemented: canMove(initial_coords,final_coords,state)
+#                                    getKillList(initial_coords,final_coords,state)
+# implemented getKillList in canMove
 def staticEval(state):
     weights = [0,0,1,1,5,5,3,3,6,6,4,4,10,10,4,4]
     board = state.board
@@ -1046,7 +1054,6 @@ def staticEval(state):
     black_list = []
     piece_present_sum = 0
     can_move_sum = 0
-    kill_sum = 0
     for i in range(0,8):
         for j in range(0,8):
             piece = board[i][j]
@@ -1057,41 +1064,72 @@ def staticEval(state):
                 else:
                     piece_present_sum += weights[piece]
                     white_list.append([piece,(i,j)])
-    to_return = 0.3*(piece_present_sum)
+    to_return = 0.8*(piece_present_sum)
     w_moves = generateNewMoves(state, BC.WHITE)
     b_moves = generateNewMoves(state, BC.BLACK)
     can_move_sum = len(w_moves) - len(b_moves)
-    for white_move in w_moves:
-        kill_list = white_move[2]
-        for elem in kill_list:
-            kill_sum += weights[elem]
-    for black_move in b_moves:
-        kill_list = black_move[2]
-        for elem in kill_list:
-            kill_sum -= weights[elem]
-    to_return += 0.6*(kill_sum)
-    to_return += 0.1*(can_move_sum)
-
+    '''move_sum = 0
+    available_pieces = white_list + black_list
+    for [piece,(x,y)] in available_pieces:
+        for i in range(0,8):
+            for j in range(0,8):
+                (moveTest, kill_list) = canMove((x,y),(i,j),state)
+                if moveTest:
+                    if not(piece % 2 == 0): can_move_sum += 1
+                    else: can_move_sum -= 1
+                    kill_sum = 0
+                    for elem in kill_list:
+                        kill_sum += weights[elem]
+                    if not(piece % 2 == 0):
+                        move_sum += kill_sum
+                    else:
+                        move_sum -= kill_sum
+    to_return += 0.5*(move_sum)'''
+    to_return += 0.2*(can_move_sum)
+    '''
+    print("can_move_sum: " + str(can_move_sum))
+    print("w_moves: " + str(len(w_moves)))
+    print("b_moves: " + str(len(b_moves)))
+    print("piece_present_sum: " + str(piece_present_sum))'''
     return to_return
 
 #returns (None,None) it time runs out. Else returns a static eval value and a move.
 def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta, move = None):
-    global TIME_BUFFER, Z_DICT, CUTOFFS
+    global TIME_BUFFER, Z_DICT
 
     #print("ply left: " + str(ply_left))
     cur_player = current_state.whose_move
 
+    '''if cur_player == BC.WHITE:
+        print("white is the player in the minimaxing function")
+    else:
+        print("black is the player in the minimaxing function")'''
+    #print("current player: " + )
     if(time.time() - start_time < (time_limit - TIME_BUFFER)):
+        #curr_coords = (0,0)
+        #final_coords = (0,0)
+
+        #st()
         if ply_left == 0:
             # new code
             hash_value = zhash(current_state)
+            #print("keys: " + str(Z_DICT.keys()))
             if hash_value in Z_DICT.keys():
                 prov = Z_DICT[hash_value]
             else:
                 prov = staticEval(current_state)
                 Z_DICT[hash_value] = prov
+            #print("value: " + str(prov))
+            #print("move: " + str(move))
             return (prov,move)
         
+            # old code
+            '''
+            #print("current state? (in minimax) " + str(current_state))
+            prov = staticEval(current_state)
+            move = (curr_coords, final_coords)
+            return (prov,move)
+            '''
         prov = 0
         move = ((0,0),(0,0))
         
@@ -1099,10 +1137,8 @@ def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta, move = N
             prov = -10000 #if white then maximize.
         else:
             prov = 10000
-
-        all_moves = generateNewMoves(current_state,cur_player)
         
-        for move_tup in all_moves:
+        for move_tup in generateNewMoves(current_state,cur_player):
             if (time.time() - start_time < (time_limit - TIME_BUFFER)):
                 actual_move = move_tup[0]
                 succ_state = move_tup[1]
@@ -1110,6 +1146,7 @@ def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta, move = N
                 final_coords = actual_move[1]
                 succ_state.whose_move = 1 - cur_player
                 move = (curr_coords,final_coords)
+                #print("Move " + str(move) + " being considered!")
                 (new_val,test_move) = miniMax(succ_state, ply_left - 1,start_time,time_limit, alpha, beta, move)
                 if (new_val != None and test_move != None):
                     #print("test static eval value: " + str(new_val))
@@ -1119,7 +1156,7 @@ def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta, move = N
                             move = (curr_coords,final_coords)
                         alpha = max(alpha, prov)
                         if beta <= alpha:
-                            CUTOFFS += 1
+                            #print("alpha pruning!")
                             break
                     else:
                         if new_val < prov:
@@ -1127,13 +1164,15 @@ def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta, move = N
                             move = (curr_coords,final_coords)
                         beta = min(beta, prov)
                         if beta <= alpha:
-                            CUTOFFS += 1
+                            #print("beta pruning!")
                             break
             else:
                 break
+        #print("value: " + str(prov))
+        #print("move: " + str(move))
         return (prov,move)
     else:
-        # new code
+        # new code (untested)
         hash_value = zhash(current_state)
         if hash_value in Z_DICT.keys():
             prov = Z_DICT[hash_value]
@@ -1153,7 +1192,7 @@ def IDDFS(current_state, whos_turn, time_limit):
         alpha = -99999
         beta = 99999
         (new_value, move) = miniMax(current_state,plyLeft,start_time,time_limit, alpha, beta)
-        if (new_value, move) != (None,None):
+        if new_value != (None,None):
             minimax_value = (new_value, move)
         plyLeft += 1
     return minimax_value
