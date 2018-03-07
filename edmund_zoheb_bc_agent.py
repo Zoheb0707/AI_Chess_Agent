@@ -997,6 +997,8 @@ def isPieceImmobilized(piece_row, piece_col, board, curr_player):
 
 # evaluation function to determine how good the board state is
 # for either black or white
+#returns a high value if state is good for white and a low
+#value if good for black.
 def staticEval(state):
     weights = [0,0,1,1,5,5,3,3,6,6,4,4,10,10,4,4]
     board = state.board
@@ -1032,7 +1034,8 @@ def staticEval(state):
 
     return to_return
 
-#returns (None,None) it time runs out. Else returns a static eval value and a move.
+#returns (None,None) it time runs out.
+#Else returns a static eval value and a move.
 def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta, move = None):
     global TIME_BUFFER, Z_DICT, CUTOFFS
 
@@ -1096,7 +1099,8 @@ def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta, move = N
         else:
             return (None,None)
 
-#returns (None,None) if no time left. else returns a static eval value and a move. 
+#returns (None,None) if no time left.
+#else returns a static eval value and a move. 
 def IDDFS(current_state, whos_turn, time_limit):
     global TIME_BUFFER
     
