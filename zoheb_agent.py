@@ -63,6 +63,7 @@ def staticEval(state):
     white_list = []
     black_list = []
     piece_present_sum = 0
+    can_move_sum = 0
     for i in range(0,8):
         for j in range(0,8):
             piece = board[i][j]
@@ -80,6 +81,8 @@ def staticEval(state):
         for i in range(0,8):
             for j in range(0,8):
                 if canMove((x,y),(i,j),state):
+                    if not(piece % 2 == 0): can_move_sum += 1
+                    else: can_move_sum -= 1
                     kill_list = getKillList((x,y),(i,j),state)
                     kill_sum = 0
                     for elem in kill_list:
@@ -88,7 +91,8 @@ def staticEval(state):
                         move_sum += kill_sum
                     else:
                         move_sum -= kill_sum
-    to_return += 0.7*(move_sum)
+    to_return += 0.5*(move_sum)
+    to_return += 0.2*(can_move_sum)
     return to_return
 
 HASH_TABLE = {}
