@@ -3,10 +3,9 @@ The beginnings of an agent that might someday play Baroque Chess.
 
 '''
 
-
-
 import BC_state_etc as BC
 from copy import deepcopy
+from pdb import set_trace as st
 import random
 import time
 
@@ -23,7 +22,7 @@ def makeMove(currentState, currentRemark, timelimit):
     
     gameBoard = newState.board
     all_moves = []
-    print("current player: " + str(curr_player))
+    #print("current player: " + str(curr_player))
 
     generatedMoves = generateNewMoves(currentState, curr_player)
     
@@ -39,18 +38,8 @@ def makeMove(currentState, currentRemark, timelimit):
         any_move = move_tup[0]
         any_state = move_tup[1]
         '''
-    
-    #findPincerMoves(newState, (1,0))
-    #findQueenStyleMoves(newState, (3, 2))
-    #findQueenStyleMoves(newState, (3, 4))
-    #findPincerMoves(newState, (3,3))
-    #findImitatorMoves(newState, (2,6))
-    #tup = random.choice(generatedMoves)
-    #print("tuple: " + str(tup))
 
     (val, move) = IDDFS(currentState, curr_player, timelimit)
-
-    
 
     num_of_move_tups = 0
 
@@ -290,7 +279,6 @@ def findQueenStyleMoves(state, curr_coord):
                     # coordinator code
                     cap_pieces = coordCapMove(test_row, test_col, new_board, who)
 
-                    #print("captured pieces: " + str(cap_pieces))
                 # leaper may change target location
                 elif leaper:
                     # leaper code
@@ -310,9 +298,6 @@ def findQueenStyleMoves(state, curr_coord):
                 
 
                 add_state = BC.BC_state(new_board, who)
-                #print("added state:")
-                #print(str(add_state))
-                # target location is (test_row, test_col)
                 move = (curr_coord, (test_row, test_col))
 
                 # this is where a check to determine whether the new state is one where
@@ -339,11 +324,9 @@ def findPincerMoves(state, curr_coord):
     
     if piece_side == who: 
         newState = BC.BC_state(state.board, who)
-        #print("who am i: " + str(who))
         
         (test_row, test_col) = curr_coord
         
-
         move_dir = [BC.NORTH, BC.EAST, BC.SOUTH, BC.WEST]
 
         for direction in move_dir:
@@ -352,20 +335,16 @@ def findPincerMoves(state, curr_coord):
             for num in range(7):
                 if direction == BC.NORTH:
                     # increment north one tile
-                    test_row = test_row - 1
-                    #print("north")
+                    test_row -= 1
                 elif direction == BC.EAST:
                     # increment east one tile
                     test_col += 1
-                    #print("east")
                 elif direction == BC.SOUTH:
                     # increment south one tile
                     test_row += 1
-                    #print("south")
                 elif direction == BC.WEST:
                     # increment west one tile
-                    test_col = test_col - 1
-                    #print("west")
+                    test_col -= 1
 
                 # test if this is a valid tile
                 if test_row < 0 or test_row > 7:
@@ -386,8 +365,6 @@ def findPincerMoves(state, curr_coord):
                     piece_cap = pincerCapMove(test_row, test_col, new_board, who)
 
                     add_state = BC.BC_state(new_board, who)
-                    #print("added state:")
-                    #print(str(add_state))
                     move = (curr_coord, (test_row, test_col))
 
                     # this is where a check to determine whether the new state is one where
@@ -435,25 +412,25 @@ def findKingMoves(state, curr_coord):
         test_row = king_row
         test_col = king_col
         if direction == BC.NORTH:
-            test_row = king_row - 1
+            test_row -= 1
         elif direction == BC.NE:
-            test_row = king_row - 1
-            test_col = king_col + 1
+            test_row -= 1
+            test_col += 1
         elif direction == BC.EAST:
-            test_col = king_col + 1
+            test_col += 1
         elif direction == BC.SE:
-            test_row = king_row + 1
-            test_col = king_col + 1
+            test_row += 1
+            test_col += 1
         elif direction == BC.SOUTH:
-            test_row = king_row + 1
+            test_row += 1
         elif direction == BC.SW:
-            test_row = king_row + 1
-            test_col = king_col - 1
+            test_row += 1
+            test_col -= 1
         elif direction == BC.WEST:
-            test_col = king_col - 1
+            test_col -= 1
         elif direction == BC.NW:
-            test_row = king_row - 1
-            test_col = king_col - 1
+            test_row -= 1
+            test_col -= 1
 
         if test_row >= 0 and test_row <= 7 and test_col >=0 and test_col <= 7:
             test_piece = newState.board[test_row][test_col]
@@ -461,14 +438,13 @@ def findKingMoves(state, curr_coord):
         test_piece_side = BC.who(test_piece)
 
         if not test_piece == INVALID_PIECE:
+            # non capture move
             if test_piece == BLANK_SPACE:
                 if piece == ally_king:
                     piece_cap = []
 
                     new_board = deepcopy(newState.board)
                     
-                    #print("test_row: " + str(test_row))
-                    #print("test_col: " + str(test_col))
                     new_board[test_row][test_col] = piece
                     new_board[king_row][king_col] = BLANK_SPACE
 
@@ -477,11 +453,8 @@ def findKingMoves(state, curr_coord):
                     add_state = BC.BC_state(new_board, who)
 
                     k_moves.append((move, add_state, piece_cap))
+            # capture move
             elif not test_piece_side == who:
-                #print("current player: " + str(who))
-                #print("target location: (" + str(test_row) + "," + str(test_col) + ")")
-                #print("test piece: " + str(test_piece))
-                #print("test piece side: " + str(test_piece_side))
                 if piece == ally_king:
                     piece_cap = []
                     piece_cap.append(test_piece)
@@ -509,8 +482,6 @@ def findKingMoves(state, curr_coord):
                         add_state = BC.BC_state(new_board, who)
 
                         k_moves.append((move, add_state, piece_cap))
-            '''else:
-                print("test_piece (own side?):  " + str(test_piece))'''
 
     return k_moves
 
@@ -522,7 +493,6 @@ def pincerCapMove(dest_row, dest_col, board, cur_player):
     global INVALID_PIECE, BLANK_SPACE
     
     # test if this is a capture move or not
-    #print("who am i (2): " + str(cur_player))
     enemy_row = dest_row
     enemy_col = dest_col
     ally_row = dest_row
@@ -564,21 +534,17 @@ def pincerCapMove(dest_row, dest_col, board, cur_player):
         # capture test: piece one tile past is enemy piece and
         # piece one two tiles past is friendly piece
         if direction == BC.NORTH:
-            #print("north")
             enemy_row = dest_row - 1
             ally_row = dest_row - 2
         elif direction == BC.EAST:
-            #print("east")
             # increment east
             enemy_col = dest_col + 1
             ally_col = dest_col + 2
         elif direction == BC.SOUTH:
-            #print("south")
             # increment south
             enemy_row = dest_row + 1
             ally_row = dest_row + 2
         elif direction == BC.WEST:
-            #print("west")
             # increment west
             enemy_col = dest_col - 1
             ally_col = dest_col - 2
@@ -586,19 +552,6 @@ def pincerCapMove(dest_row, dest_col, board, cur_player):
         if ally_col >= 0 and ally_col <= 7 and ally_row >= 0 and ally_row <= 7:
             ally_piece = board[ally_row][ally_col]
             enemy_piece = board[enemy_row][enemy_col]
-
-        # print statements for testing
-        '''
-        print("orig_row: " + str(dest_row))
-        print("orig_col: " + str(dest_col))
-        print("enemy_row: " + str(enemy_row))
-        print("enemy_col: " + str(enemy_col))
-        print("ally_row: " + str(ally_row))
-        print("ally_col: " + str(ally_col))
-        print("ally_piece: " + str(ally_piece))
-        print("enemy_piece: " + str(enemy_piece))
-        print()
-        '''
 
         # if friend and enemy are not invalid pieces
         if not ally_piece == BLANK_SPACE and not enemy_piece == BLANK_SPACE:
@@ -608,10 +561,6 @@ def pincerCapMove(dest_row, dest_col, board, cur_player):
             # captured piece is an enemy
             if ally_side == cur_player and not enemy_side == cur_player:
                 cap_test = True
-
-        #print("value of enemy: " + str(enemy_piece))
-        #print("value of ally: " + str(ally_piece))
-        #print("value of cap_test: " + str(cap_test))
 
         if cap_test:
             if pieceUsed == ally_pincer:
@@ -658,9 +607,6 @@ def coordCapMove(dest_row, dest_col, board, cur_player):
     # possible captured pieces
     cap_piece1 = board[row_king][dest_col]
     cap_piece2 = board[dest_row][col_king]
-
-    #print("captured_piece1: " + str(cap_piece1))
-    #print("captured_piece2: " + str(cap_piece2))
 
     # side of captured pieces
     piece1_side = BC.who(cap_piece1)
@@ -719,7 +665,6 @@ def leaperCapMove(dest_row, dest_col, direction, cur_player, curr_coord, new_sta
 
     global BLANK_SPACE, INVALID_PIECE
     
-
     # test if this is a capture move or not
     enemy_row = dest_row
     enemy_col = dest_col
@@ -815,7 +760,6 @@ def leaperCapMove(dest_row, dest_col, direction, cur_player, curr_coord, new_sta
         elif piece == ally_imitator:
             if enemy_piece == enemy_leaper:
                 new_board = new_state.board
-                #print("piece: " + str(piece))
                 new_board[empty_row][empty_col] = piece
                 new_board[dest_row][dest_col] = BLANK_SPACE
                 captured_pieces.append(enemy_piece)
@@ -919,42 +863,28 @@ def isPieceNextTo(piece_row, piece_col, board, other_piece):
         test_row = piece_row
         test_col = piece_col
         if direction == BC.NORTH:
-            #print("north")
             test_row = piece_row - 1
         elif direction == BC.NE:
-            #print("northeast")
             test_row = piece_row - 1
             test_col = piece_col + 1
         elif direction == BC.EAST:
-            #print("east")
             test_col = piece_col + 1
         elif direction == BC.SE:
-            #print("se")
             test_row = piece_row + 1
             test_col = piece_col + 1
         elif direction == BC.SOUTH:
-            #print("s")
             test_row = piece_row + 1
         elif direction == BC.SW:
-            #print("sw")
             test_row = piece_row + 1
             test_col = piece_col - 1
         elif direction == BC.WEST:
-            #print("w")
             test_col = piece_col - 1
         elif direction == BC.NW:
-            #print("nw")
             test_row = piece_row - 1
             test_col = piece_col - 1
 
-        #print("test row: " + str(test_row))
-        #print("test col: " + str(test_col))
-
         if test_row >= 0 and test_row <= 7 and test_col >=0 and test_col <= 7:
             test_piece = board[test_row][test_col]
-
-        #print("test piece: " + str(test_piece))
-        #print("other piece: " + str(other_piece))
 
         if test_piece == other_piece:
             # return nextTo, and location of found piece
@@ -1135,7 +1065,6 @@ def miniMax(current_state, ply_left,start_time,time_limit, alpha, beta):
             if (time.time() - start_time < (time_limit - TIME_BUFFER)):
                 actual_move = move_tup[0]
                 succ_state = move_tup[1]
-                #print(str(succ_state))
                 curr_coords = actual_move[0]
                 final_coords = actual_move[1]
                 succ_state.whose_move = 1 - cur_player
@@ -1166,7 +1095,6 @@ def IDDFS(current_state, whos_turn, time_limit):
     minimax_value = (None,None)
     start_time = time.time()
     while (time.time() - start_time < (time_limit - TIME_BUFFER)):
-        #print("current state? (in iddfs) " + str(current_state))
         alpha = -99999
         beta = 99999
         (new_value, move) = miniMax(current_state,plyLeft,start_time,time_limit, alpha, beta)
