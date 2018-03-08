@@ -85,7 +85,7 @@ def makeMove(currentState, currentRemark, timelimit):
 
     listOfRemarks.append("My evaluation function value of " + val_str + " is UNSTOPPABLE!")
 
-    listOfRemarks.append("How am I supposed to choose from " + str(num_of_move_tups) + " number of possible moves? This is insanity!")
+    listOfRemarks.append("How am I supposed to choose from " + str(num_of_move_tups) + " possible moves? This is insanity!")
 
     listOfRemarks.append("I grow tired of your endless babbling.")
 
