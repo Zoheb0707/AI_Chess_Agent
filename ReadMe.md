@@ -1,6 +1,6 @@
 # AI_Chess_Agent
 
 
-Created a repo.
+The game playing agent is edmund_zoheb_bc_agent.py. The agent plays the game of baroque chess.
 
-Milestone 1: Contains a report about the creators of the project, their responsibilities and a short discription of the project.
+It utilises minimax search combined with alpha beta pruning and zobrist hashing to find out the best move.
